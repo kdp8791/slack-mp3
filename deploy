@@ -1,0 +1,27 @@
+#! /bin/bash
+
+USER=
+HOST=
+DEPLOY_DIR_ROOT=
+
+# copy files over
+cd ../
+tar -czf mp3.tar.gz slack-mp3
+scp mp3.tar.gz $USER@$HOST:$DEPLOY_DIR_ROOT
+rm mp3.tar.gz
+
+# go to server
+ssh -T $USER@$HOST << EOF
+	pm2 stop mp3
+	cd $DEPLOY_DIR_ROOT
+	if [ -d "$DEPLOY_DIR_ROOT/mp3" ]; then
+		rm -rf mp3
+	fi
+	tar -xzf mp3.tar.gz
+	rm mp3.tar.gz
+    mv slack-mp3 mp3
+	cd mp3
+	rm deploy
+	sudo npm install
+	pm2 start app.js --name="mp3"
+EOF
